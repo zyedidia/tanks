@@ -28,6 +28,6 @@ var DefaultGamepad = map[input.Action]input.GamepadInput{
 	ActionLeftReverse:  input.AxisLADown,
 	ActionRightDrive:   input.AxisRAUp,
 	ActionRightReverse: input.AxisRADown,
-	ActionShoot:        input.ButtonA,
-	ActionReload:       input.ButtonX,
+	ActionShoot:        input.ButtonR1,
+	ActionReload:       input.ButtonL1,
 }

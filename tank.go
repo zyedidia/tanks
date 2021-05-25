@@ -2,11 +2,8 @@ package main
 
 import (
 	"fmt"
-	"image"
 	_ "image/png"
-	"log"
 	"math"
-	"os"
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
@@ -32,39 +29,31 @@ type Tank struct {
 
 	lastShot time.Time
 
+	health int
+
 	img *ebiten.Image
 }
 
-func NewTank(space *cp.Space) *Tank {
+func NewTank(space *cp.Space, x, y, angle float64, input input.Controller) *Tank {
 	control := space.AddBody(cp.NewKinematicBody())
-	body := addBox(space, twidth, theight, tmass)
+	body := addBox(space, x, y, twidth, theight, tmass)
+	body.SetAngle(angle)
 
 	pivot := space.AddConstraint(cp.NewPivotJoint2(control, body, cp.Vector{}, cp.Vector{}))
 	pivot.SetMaxBias(0)
-	pivot.SetMaxForce(1000)
+	pivot.SetMaxForce(800)
 
 	gear := space.AddConstraint(cp.NewGearJoint(control, body, 0.0, 1.0))
 	gear.SetErrorBias(0) // attempt to fully correct the joint each step
 	gear.SetMaxBias(1.2)
 	gear.SetMaxForce(50000)
 
-	// img := ebiten.NewImage(twidth, theight)
-	// img.Fill(color.White)
-	f, err := os.Open("assets/img/tank.png")
-	if err != nil {
-		log.Fatal(err)
-	}
-	tankimg, _, err := image.Decode(f)
-	if err != nil {
-		log.Fatal(err)
-	}
-	img := ebiten.NewImageFromImage(tankimg)
-
 	t := &Tank{
 		body:    body,
 		control: control,
-		input:   input.NewGamepad(0, DefaultGamepad),
-		img:     img,
+		input:   input,
+		img:     assets.images["tank.png"],
+		health:  10,
 	}
 	t.body.UserData = t
 
@@ -72,24 +61,33 @@ func NewTank(space *cp.Space) *Tank {
 }
 
 func (t *Tank) Update(space *cp.Space) {
-	ldrive := t.input.Get(ActionLeftDrive) - t.input.Get(ActionLeftReverse)
-	rdrive := t.input.Get(ActionRightDrive) - t.input.Get(ActionRightReverse)
-	t.ltspeed = 2.0 * ldrive
-	t.rtspeed = 2.0 * rdrive
-
-	switch {
-	case t.input.Get(ActionShoot) != 0:
-		if time.Since(t.lastShot) >= 500*time.Millisecond {
-			NewBullet(space, 100, 100)
-			fmt.Println("Pew pew")
-			t.lastShot = time.Now()
-		}
-	case t.input.Get(ActionReload) != 0:
-		fmt.Println("Reload")
-	}
-
 	pos := t.body.Position()
 	angle := t.body.Angle()
+
+	if t.health > 0 {
+		ldrive := t.input.Get(ActionLeftDrive) - t.input.Get(ActionLeftReverse)
+		rdrive := t.input.Get(ActionRightDrive) - t.input.Get(ActionRightReverse)
+		t.ltspeed = 2.0 * ldrive
+		t.rtspeed = 2.0 * rdrive
+
+		switch {
+		case t.input.Get(ActionShoot) != 0:
+			if time.Since(t.lastShot) >= 500*time.Millisecond {
+				angle := angle - math.Pi/2
+				NewBullet(space, pos.X+twidth/4*math.Cos(angle), pos.Y+theight/4*math.Sin(angle), 150, angle)
+				fmt.Println("Pew pew")
+				assets.sounds["shoot.ogg"].Rewind()
+				assets.sounds["shoot.ogg"].Play()
+				t.lastShot = time.Now()
+			}
+		case t.input.Get(ActionReload) != 0:
+			fmt.Println("Reload")
+		}
+	} else {
+		t.ltspeed = 0
+		t.rtspeed = 0
+	}
+
 	rtpos := pos.Add(cp.Vector{twidth / 2 * math.Cos(angle), twidth / 2 * math.Sin(angle)})
 	ltpos := pos.Add(cp.Vector{-twidth / 2 * math.Cos(angle), -twidth / 2 * math.Sin(angle)})
 
@@ -127,9 +125,9 @@ func (t *Tank) Draw(screen *ebiten.Image) {
 	screen.DrawImage(t.img, op)
 }
 
-func addBox(space *cp.Space, width, height, mass float64) *cp.Body {
+func addBox(space *cp.Space, x, y, width, height, mass float64) *cp.Body {
 	body := space.AddBody(cp.NewBody(mass, cp.MomentForBox(mass, width, height)))
-	body.SetPosition(cp.Vector{100, 100})
+	body.SetPosition(cp.Vector{x, y})
 
 	shape := space.AddShape(cp.NewBox(body, width, height, 0))
 	shape.SetElasticity(0)

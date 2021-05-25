@@ -14,8 +14,10 @@ const (
 	// screenHeight = 1080 / 4
 
 	screenWidth  = 600
-	screenHeight = 600
+	screenHeight = 400
 )
+
+var assets *AssetManager
 
 type Game struct {
 	state GameState
@@ -41,7 +43,7 @@ func (g *Game) Update() error {
 func (g *Game) Draw(screen *ebiten.Image) {
 	g.state.Draw(screen)
 
-	ebitenutil.DebugPrint(screen, fmt.Sprintf("TPS: %0.2f", ebiten.CurrentTPS()))
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("FPS: %0.2f", ebiten.CurrentTPS()))
 }
 
 func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
@@ -53,6 +55,8 @@ func main() {
 	ebiten.SetWindowResizable(true)
 	ebiten.SetWindowTitle("Turbo Tanks")
 	ebiten.SetVsyncEnabled(false)
+
+	assets = LoadAssets()
 
 	g := &Game{
 		state: NewMatch(),

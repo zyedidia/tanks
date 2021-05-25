@@ -2,6 +2,7 @@ package main
 
 import (
 	"image/color"
+	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
@@ -10,13 +11,15 @@ import (
 type Bullet struct {
 	body *cp.Body
 
+	spawning bool
+
 	img *ebiten.Image
 }
 
-func NewBullet(space *cp.Space, x, y float64) *Bullet {
+func NewBullet(space *cp.Space, x, y, speed, angle float64) *Bullet {
 	body := space.AddBody(cp.NewBody(5, 10))
 	body.SetPosition(cp.Vector{x, y})
-	body.SetVelocity(150, 0)
+	body.SetVelocity(speed*math.Cos(angle), speed*math.Sin(angle))
 
 	shape := space.AddShape(cp.NewCircle(body, 2.5, cp.Vector{}))
 	shape.SetElasticity(1)
@@ -27,8 +30,9 @@ func NewBullet(space *cp.Space, x, y float64) *Bullet {
 	img.Fill(color.White)
 
 	b := &Bullet{
-		body: body,
-		img:  img,
+		body:     body,
+		spawning: true,
+		img:      assets.images["bullet.png"],
 	}
 	b.body.UserData = b
 	return b
@@ -39,7 +43,7 @@ func (b *Bullet) Update(space *cp.Space) {}
 func (b *Bullet) Draw(screen *ebiten.Image) {
 	pos := b.body.Position()
 	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Translate(-8, -8)
+	op.GeoM.Translate(-2.5, -2.5)
 	op.GeoM.Rotate(b.body.Angle())
 	op.GeoM.Translate(pos.X, pos.Y)
 
