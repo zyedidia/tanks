@@ -18,7 +18,7 @@ var DefaultKeyboard1 = map[input.Action]ebiten.Key{
 	ActionReverse: ebiten.KeyS,
 	ActionRight:   ebiten.KeyD,
 	ActionLeft:    ebiten.KeyA,
-	ActionShoot:   ebiten.KeyControlLeft,
+	ActionShoot:   ebiten.KeyShiftLeft,
 }
 
 var DefaultKeyboard2 = map[input.Action]ebiten.Key{
@@ -26,7 +26,7 @@ var DefaultKeyboard2 = map[input.Action]ebiten.Key{
 	ActionReverse: ebiten.KeyDown,
 	ActionRight:   ebiten.KeyRight,
 	ActionLeft:    ebiten.KeyLeft,
-	ActionShoot:   ebiten.KeyShiftRight,
+	ActionShoot:   ebiten.KeySpace,
 }
 
 var DefaultGamepad = map[input.Action]input.GamepadInput{
