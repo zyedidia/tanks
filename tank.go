@@ -90,8 +90,8 @@ func (t *Tank) Update(space *cp.Space) {
 	angle := t.body.Angle()
 
 	if t.health > 0 {
-		ldrive := t.input.Get(ActionLeftDrive) - t.input.Get(ActionLeftReverse)
-		rdrive := t.input.Get(ActionRightDrive) - t.input.Get(ActionRightReverse)
+		ldrive := math.Max(t.input.Get(ActionDrive), t.input.Get(ActionRight)) - math.Max(t.input.Get(ActionReverse), t.input.Get(ActionLeft))
+		rdrive := math.Max(t.input.Get(ActionDrive), t.input.Get(ActionLeft)) - math.Max(t.input.Get(ActionReverse), t.input.Get(ActionRight))
 		t.ltspeed = 2.0 * ldrive
 		t.rtspeed = 2.0 * rdrive
 

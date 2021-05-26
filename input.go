@@ -6,28 +6,33 @@ import (
 )
 
 const (
-	ActionLeftDrive input.Action = iota
-	ActionLeftReverse
-	ActionRightDrive
-	ActionRightReverse
+	ActionDrive input.Action = iota
+	ActionReverse
+	ActionRight
+	ActionLeft
 	ActionShoot
-	ActionReload
 )
 
-var DefaultKeyboard = map[input.Action]ebiten.Key{
-	ActionLeftDrive:    ebiten.KeyW,
-	ActionLeftReverse:  ebiten.KeyS,
-	ActionRightDrive:   ebiten.KeyI,
-	ActionRightReverse: ebiten.KeyK,
-	ActionShoot:        ebiten.KeySpace,
-	ActionReload:       ebiten.KeyM,
+var DefaultKeyboard1 = map[input.Action]ebiten.Key{
+	ActionDrive:   ebiten.KeyW,
+	ActionReverse: ebiten.KeyS,
+	ActionRight:   ebiten.KeyD,
+	ActionLeft:    ebiten.KeyA,
+	ActionShoot:   ebiten.KeyControlLeft,
+}
+
+var DefaultKeyboard2 = map[input.Action]ebiten.Key{
+	ActionDrive:   ebiten.KeyUp,
+	ActionReverse: ebiten.KeyDown,
+	ActionRight:   ebiten.KeyRight,
+	ActionLeft:    ebiten.KeyLeft,
+	ActionShoot:   ebiten.KeyShiftRight,
 }
 
 var DefaultGamepad = map[input.Action]input.GamepadInput{
-	ActionLeftDrive:    input.AxisLAUp,
-	ActionLeftReverse:  input.AxisLADown,
-	ActionRightDrive:   input.AxisRAUp,
-	ActionRightReverse: input.AxisRADown,
-	ActionShoot:        input.ButtonR1,
-	ActionReload:       input.ButtonL1,
+	ActionDrive:   input.AxisLAUp,
+	ActionReverse: input.AxisLADown,
+	ActionRight:   input.AxisLARight,
+	ActionLeft:    input.AxisLALeft,
+	ActionShoot:   input.ButtonA,
 }

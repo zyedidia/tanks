@@ -81,8 +81,8 @@ func NewMatch() *Match {
 		seg.SetFriction(1)
 	}
 
-	NewTank(space, width/8, 7*height/8, 0, input.NewKeyboard(DefaultKeyboard))
-	NewTank(space, 7*width/8, height/8, math.Pi, input.NewGamepad(0, DefaultGamepad))
+	NewTank(space, width/8, 7*height/8, 0, input.NewKeyboard(DefaultKeyboard1))
+	NewTank(space, 7*width/8, height/8, math.Pi, input.NewKeyboard(DefaultKeyboard2))
 
 	m := &Match{
 		done:  false,
