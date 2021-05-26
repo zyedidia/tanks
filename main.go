@@ -13,7 +13,7 @@ const (
 	// screenWidth  = 1920 / 4
 	// screenHeight = 1080 / 4
 
-	screenWidth  = 600
+	screenWidth  = 570
 	screenHeight = 400
 )
 
@@ -54,7 +54,7 @@ func main() {
 	ebiten.SetWindowSize(screenWidth, screenHeight)
 	ebiten.SetWindowResizable(true)
 	ebiten.SetWindowTitle("Turbo Tanks")
-	ebiten.SetVsyncEnabled(false)
+	ebiten.SetVsyncEnabled(true)
 
 	assets = LoadAssets()
 

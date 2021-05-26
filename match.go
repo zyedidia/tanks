@@ -41,12 +41,36 @@ func NewMatch() *Match {
 		{width, 0}, {width, height - 1},
 		{1, 0}, {width, 0},
 		{1, height - 1}, {width, height - 1},
-
-		{width / 3, height / 3}, {width / 3, 2 * height / 3},
-		{2 * width / 3, height / 3}, {2 * width / 3, 2 * height / 3},
-		{width / 3, height / 3}, {2 * width / 3, height / 3},
-		{width / 3, 2 * height / 3}, {2 * width / 3, 2 * height / 3},
 	}
+
+	// arena := []cp.Vector{
+	// 	{width / 3, height / 3}, {width / 3, 2 * height / 3},
+	// 	{2 * width / 3, height / 3}, {2 * width / 3, 2 * height / 3},
+	// 	{width / 3, height / 3}, {2 * width / 3, height / 3},
+	// 	{width / 3, 2 * height / 3}, {2 * width / 3, 2 * height / 3},
+	// }
+
+	arena := []cp.Vector{
+		{50, 50}, {300, 50},
+		{50, 50}, {50, 100},
+		{50, 100}, {150, 100},
+		{150, 100}, {150, 260},
+		{150, 260}, {200, 260},
+		{200, 260}, {200, 100},
+		{200, 100}, {300, 100},
+		{300, 100}, {300, 50},
+
+		{50 + 210, height - 50}, {300 + 210, height - 50},
+		{50 + 210, height - 50}, {50 + 210, height - 100},
+		{50 + 210, height - 100}, {150 + 210, height - 100},
+		{150 + 210, height - 100}, {150 + 210, height - 260},
+		{150 + 210, height - 260}, {200 + 210, height - 260},
+		{200 + 210, height - 260}, {200 + 210, height - 100},
+		{200 + 210, height - 100}, {300 + 210, height - 100},
+		{300 + 210, height - 100}, {300 + 210, height - 50},
+	}
+
+	sides = append(sides, arena...)
 
 	for i := 0; i < len(sides); i += 2 {
 		var seg *cp.Shape
@@ -58,8 +82,8 @@ func NewMatch() *Match {
 		seg.SetFriction(1)
 	}
 
-	NewTank(space, width/8, height/8, math.Pi, input.NewKeyboard(DefaultKeyboard))
-	NewTank(space, 7*width/8, 7*height/8, 0, input.NewGamepad(0, DefaultGamepad))
+	NewTank(space, width/8, 7*height/8, 0, input.NewKeyboard(DefaultKeyboard))
+	NewTank(space, 7*width/8, height/8, math.Pi, input.NewGamepad(0, DefaultGamepad))
 
 	m := &Match{
 		done:  false,
