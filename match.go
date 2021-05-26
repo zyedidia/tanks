@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"image/color"
 	"math"
 
@@ -24,8 +23,9 @@ type GameObject interface {
 }
 
 type Match struct {
-	done  bool
-	space *cp.Space
+	done       bool
+	explosions []Explosion
+	space      *cp.Space
 }
 
 func NewMatch() *Match {
@@ -77,7 +77,6 @@ func NewMatch() *Match {
 		seg = space.AddShape(cp.NewSegment(space.StaticBody, sides[i], sides[i+1], 0))
 		seg.UserData = &Line{sides[i], sides[i+1]}
 		seg.SetCollisionType(CollisionWall)
-		fmt.Println(sides[i], sides[i+1])
 		seg.SetElasticity(1)
 		seg.SetFriction(1)
 	}
@@ -105,6 +104,15 @@ func NewMatch() *Match {
 		return false
 	}
 
+	wallHandler := space.NewCollisionHandler(CollisionTank, CollisionWall)
+	wallHandler.BeginFunc = func(arb *cp.Arbiter, space *cp.Space, userdata interface{}) bool {
+		if !assets.sounds["crash.ogg"].IsPlaying() {
+			assets.sounds["crash.ogg"].Rewind()
+			assets.sounds["crash.ogg"].Play()
+		}
+		return true
+	}
+
 	return m
 }
 
@@ -114,6 +122,10 @@ func (m *Match) Update() (GameState, error) {
 			g.Update(m.space)
 		}
 	})
+
+	for _, e := range m.explosions {
+		e.Update()
+	}
 
 	m.space.Step(1.0 / float64(ebiten.MaxTPS()))
 
@@ -138,8 +150,13 @@ func (m *Match) Draw(screen *ebiten.Image) {
 		}
 	})
 
+	for _, e := range m.explosions {
+		e.Draw(screen)
+	}
+
 	if m.done {
 		ebitenutil.DebugPrintAt(screen, "Game Over", screenWidth/2-30, screenHeight/2-3)
+		ebitenutil.DebugPrintAt(screen, "Press Enter to Restart", screenWidth/2-70, screenHeight/2+20)
 	}
 }
 
@@ -167,6 +184,16 @@ func bulletTankCollision(arb *cp.Arbiter, space *cp.Space, userdata interface{})
 
 	assets.sounds["explode.ogg"].Rewind()
 	assets.sounds["explode.ogg"].Play()
+
+	m := userdata.(*Match)
+	m.explosions = append(m.explosions, Explosion{
+		img: &AnimImage{
+			count: 0,
+			anim:  assets.anims["explosion"],
+		},
+		x: bullet.Body().Position().X,
+		y: bullet.Body().Position().Y,
+	})
 
 	if tank, ok := tank.Body().UserData.(*Tank); ok {
 		tank.health--

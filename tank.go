@@ -1,10 +1,11 @@
 package main
 
 import (
-	"fmt"
 	_ "image/png"
 	"math"
 	"time"
+
+	"sync/atomic"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
@@ -13,7 +14,7 @@ import (
 
 const (
 	twidth  = 26
-	theight = 30
+	theight = 22
 	tmass   = 10
 )
 
@@ -27,11 +28,16 @@ type Tank struct {
 	rtspeed     float64
 	targetAngle float64
 
-	lastShot time.Time
+	lastShot   time.Time
+	lastReload time.Time
 
-	health int
+	health  int
+	bullets int32
 
-	img *ebiten.Image
+	ltrack  *AnimImage
+	rtrack  *AnimImage
+	chassis *ebiten.Image
+	turret  *ebiten.Image
 }
 
 func NewTank(space *cp.Space, x, y, angle float64, input input.Controller) *Tank {
@@ -52,12 +58,31 @@ func NewTank(space *cp.Space, x, y, angle float64, input input.Controller) *Tank
 		body:    body,
 		control: control,
 		input:   input,
-		img:     assets.images["tank.png"],
+		chassis: assets.images["chassis.png"],
+		turret:  assets.images["turret.png"],
 		health:  10,
+		bullets: 5,
+		ltrack: &AnimImage{
+			anim:  assets.anims["ltrack"],
+			count: 0,
+		},
+		rtrack: &AnimImage{
+			anim:  assets.anims["ltrack"],
+			count: 0,
+		},
 	}
 	t.body.UserData = t
 
 	return t
+}
+
+const reloadTime = 3 * time.Second
+
+func (t *Tank) Reload() {
+	go func() {
+		time.Sleep(reloadTime)
+		atomic.StoreInt32(&t.bullets, 5)
+	}()
 }
 
 func (t *Tank) Update(space *cp.Space) {
@@ -73,19 +98,39 @@ func (t *Tank) Update(space *cp.Space) {
 		switch {
 		case t.input.Get(ActionShoot) != 0:
 			if time.Since(t.lastShot) >= 500*time.Millisecond {
+				t.lastShot = time.Now()
+				if atomic.LoadInt32(&t.bullets) <= 0 {
+					assets.sounds["klick.ogg"].Rewind()
+					assets.sounds["klick.ogg"].Play()
+					break
+				}
+				atomic.AddInt32(&t.bullets, -1)
 				angle := angle - math.Pi/2
 				NewBullet(space, pos.X+twidth/4*math.Cos(angle), pos.Y+theight/4*math.Sin(angle), 150, angle)
-				fmt.Println("Pew pew")
 				assets.sounds["shoot.ogg"].Rewind()
 				assets.sounds["shoot.ogg"].Play()
-				t.lastShot = time.Now()
+
+				t.body.ApplyImpulseAtWorldPoint(cp.Vector{-200 * math.Cos(angle), -200 * math.Sin(angle)}, t.body.Position())
+
+				if atomic.LoadInt32(&t.bullets) <= 0 {
+					t.Reload()
+				}
 			}
-		case t.input.Get(ActionReload) != 0:
-			fmt.Println("Reload")
 		}
 	} else {
 		t.ltspeed = 0
 		t.rtspeed = 0
+	}
+
+	if t.ltspeed > 0 {
+		t.ltrack.Forward()
+	} else if t.ltspeed < 0 {
+		t.ltrack.Backward()
+	}
+	if t.rtspeed > 0 {
+		t.rtrack.Forward()
+	} else if t.rtspeed < 0 {
+		t.rtrack.Backward()
 	}
 
 	rtpos := pos.Add(cp.Vector{twidth / 2 * math.Cos(angle), twidth / 2 * math.Sin(angle)})
@@ -104,6 +149,13 @@ func (t *Tank) Update(space *cp.Space) {
 	if math.Abs(diffY) < 0.1 {
 		diffY = 0
 	}
+	velocity := t.body.Velocity()
+	if (diffX != 0 && sign(velocity.X) == -sign(diffX)) || (diffY != 0 && sign(velocity.Y) == -sign(diffY)) {
+		if !assets.sounds["brake.ogg"].IsPlaying() {
+			assets.sounds["brake.ogg"].Rewind()
+			assets.sounds["brake.ogg"].Play()
+		}
+	}
 	t.control.SetVelocityVector(cp.Vector{
 		X: diffX * 50,
 		Y: diffY * 50,
@@ -121,8 +173,26 @@ func (t *Tank) Draw(screen *ebiten.Image) {
 	op.GeoM.Translate(-twidth/2, -theight/2)
 	op.GeoM.Rotate(t.body.Angle())
 	op.GeoM.Translate(pos.X, pos.Y)
+	screen.DrawImage(t.chassis, op)
 
-	screen.DrawImage(t.img, op)
+	op = &ebiten.DrawImageOptions{}
+	op.GeoM.Translate(-14/2, -21)
+	op.GeoM.Rotate(t.body.Angle())
+	op.GeoM.Translate(pos.X, pos.Y)
+	screen.DrawImage(t.turret, op)
+
+	op = &ebiten.DrawImageOptions{}
+	op.GeoM.Translate(-3, -10)
+	op.GeoM.Rotate(t.body.Angle())
+	op.GeoM.Translate(pos.X-9*math.Cos(t.body.Angle()), pos.Y-9*math.Sin(t.body.Angle()))
+	screen.DrawImage(t.ltrack.Image(), op)
+
+	op = &ebiten.DrawImageOptions{}
+	op.GeoM.Translate(-3, -10)
+	op.GeoM.Scale(-1, 1)
+	op.GeoM.Rotate(t.body.Angle())
+	op.GeoM.Translate(pos.X+9*math.Cos(t.body.Angle()), pos.Y+9*math.Sin(t.body.Angle()))
+	screen.DrawImage(t.rtrack.Image(), op)
 }
 
 func addBox(space *cp.Space, x, y, width, height, mass float64) *cp.Body {
@@ -144,4 +214,13 @@ func clamp(val, min, max float64) float64 {
 		val = min
 	}
 	return val
+}
+
+func sign(a float64) int {
+	if a < 0 {
+		return -1
+	} else if a > 0 {
+		return 1
+	}
+	return 0
 }

@@ -3,15 +3,18 @@ package main
 import (
 	"image/color"
 	"math"
+	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
 )
 
 type Bullet struct {
-	body *cp.Body
+	body  *cp.Body
+	shape *cp.Shape
 
-	spawning bool
+	spawning  bool
+	spawnTime time.Time
 
 	img *ebiten.Image
 }
@@ -30,15 +33,24 @@ func NewBullet(space *cp.Space, x, y, speed, angle float64) *Bullet {
 	img.Fill(color.White)
 
 	b := &Bullet{
-		body:     body,
-		spawning: true,
-		img:      assets.images["bullet.png"],
+		shape:     shape,
+		body:      body,
+		spawning:  true,
+		spawnTime: time.Now(),
+		img:       assets.images["bullet.png"],
 	}
 	b.body.UserData = b
 	return b
 }
 
-func (b *Bullet) Update(space *cp.Space) {}
+const bulletLifetime = time.Second * 4
+
+func (b *Bullet) Update(space *cp.Space) {
+	if time.Since(b.spawnTime) >= bulletLifetime {
+		space.RemoveShape(b.shape)
+		space.RemoveBody(b.body)
+	}
+}
 
 func (b *Bullet) Draw(screen *ebiten.Image) {
 	pos := b.body.Position()

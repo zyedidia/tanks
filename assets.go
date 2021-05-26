@@ -24,12 +24,15 @@ var sounds embed.FS
 type AssetManager struct {
 	images map[string]*ebiten.Image
 	sounds map[string]*audio.Player
+	anims  map[string]*Animation
 }
 
 func LoadAssets() *AssetManager {
+	images := loadImages()
 	return &AssetManager{
-		images: loadImages(),
+		images: images,
 		sounds: loadSounds(),
+		anims:  loadAnimations(images),
 	}
 }
 
@@ -89,4 +92,29 @@ func loadSounds() map[string]*audio.Player {
 	loaded["explode.ogg"].SetVolume(0.5)
 
 	return loaded
+}
+
+func loadAnimations(images map[string]*ebiten.Image) map[string]*Animation {
+	return map[string]*Animation{
+		"ltrack": &Animation{
+			loop:     true,
+			slowdown: 5,
+			img:      images["ltrack-sheet.png"],
+			frames:   buildFrames(0, 0, 6, 20, 9),
+		},
+		"explosion": &Animation{
+			loop:     false,
+			slowdown: 2,
+			img:      images["explosion-6.png"],
+			frames:   buildFrames(0, 0, 48, 48, 8),
+		},
+	}
+}
+
+func buildFrames(x, y, w, h, nframes int) []image.Rectangle {
+	frames := make([]image.Rectangle, nframes)
+	for i := 0; i < nframes; i++ {
+		frames[i] = image.Rect(x*w+w*i, y*h, x*w+w*i+w, y*h+h)
+	}
+	return frames
 }
