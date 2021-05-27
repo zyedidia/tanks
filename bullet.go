@@ -43,7 +43,7 @@ func NewBullet(space *cp.Space, x, y, speed, angle float64) *Bullet {
 	return b
 }
 
-const bulletLifetime = time.Second * 4
+const bulletLifetime = time.Second * 5
 
 func (b *Bullet) Update(space *cp.Space) {
 	if time.Since(b.spawnTime) >= bulletLifetime {

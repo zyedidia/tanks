@@ -104,7 +104,7 @@ func loadAnimations(images map[string]*ebiten.Image) map[string]*Animation {
 		},
 		"explosion": &Animation{
 			loop:     false,
-			slowdown: 2,
+			slowdown: 8,
 			img:      images["explosion-6.png"],
 			frames:   buildFrames(0, 0, 48, 48, 8),
 		},
