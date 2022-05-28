@@ -9,7 +9,7 @@ import (
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/jakecoffman/cp"
-	"github.com/zyedidia/turbotanks/input"
+	"github.com/zyedidia/tanks/input"
 )
 
 const (

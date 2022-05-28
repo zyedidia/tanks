@@ -1,4 +1,4 @@
-module github.com/zyedidia/turbotanks
+module github.com/zyedidia/tanks
 
 go 1.16
 

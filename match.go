@@ -8,7 +8,7 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
 	"github.com/hajimehoshi/ebiten/v2/inpututil"
 	"github.com/jakecoffman/cp"
-	"github.com/zyedidia/turbotanks/input"
+	"github.com/zyedidia/tanks/input"
 )
 
 const (
